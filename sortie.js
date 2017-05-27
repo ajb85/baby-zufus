@@ -1,8 +1,8 @@
-var fs = require("fs");
 var request = require('request');
+var worldstateData = require('warframe-worldstate-data');
 
-var missionTypesRaw = fs.readFileSync("missionTypes.json");
-var sortieDataRaw = fs.readFileSync("sortieData.json");
+var missionTypesRaw = worldstateData.missionTypes;
+var sortieDataRaw = worldstateData.sortie;
 var missionTypes = JSON.parse(missionTypesRaw);
 var sortieData = JSON.parse(sortieDataRaw);
 
