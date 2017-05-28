@@ -19,6 +19,12 @@ zufus.on('message', msg => {
   if (msg.content === 'ping') {
     msg.channel.send('Pong!');
   }
+  else if (msg.content === 'sortie'){
+    var sortie = require('./sortie.js');
+    sortie(function(giantString){
+      msg.channel.send(giantString);
+    });
+  }
 });
 
 zufus.login(API_TOKEN);
