@@ -1,8 +1,8 @@
+var fs = require("fs");
 var request = require('request');
-var worldstateData = require('warframe-worldstate-data');
 
-var missionTypesRaw = worldstateData.missionTypes;
-var sortieDataRaw = worldstateData.sortie;
+var missionTypesRaw = fs.readFileSync("missionTypes.json");
+var sortieDataRaw = fs.readFileSync("sortieData.json");
 var missionTypes = JSON.parse(missionTypesRaw);
 var sortieData = JSON.parse(sortieDataRaw);
 
@@ -17,9 +17,6 @@ request('http://content.warframe.com/dynamic/worldState.php', {json: true}, func
 });
 
 function sortieTranslate(garbled){
-  console.log();
-  console.log("This was written using JavaScript");
-  console.log();
   console.log("First mision:", missionTypes[garbled[0][0]]["value"], "with", sortieData["modifierTypes"][garbled[0][1]]);
   console.log("Second mission:",missionTypes[garbled[1][0]]["value"], "with", sortieData["modifierTypes"][garbled[1][1]]);
   console.log("Third mission:",missionTypes[garbled[2][0]]["value"], "with", sortieData["modifierTypes"][garbled[2][1]]);
