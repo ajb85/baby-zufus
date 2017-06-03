@@ -5,7 +5,6 @@ var nodeData = worldStateData.solNodes;
 
 function getSortieData(callback) {
   var body = require("./wfWorldStateData.js");
-  testVar = "test";
   body(function(rawData, dataOfInterest) {
     callback(rawData);
   }, setDataType);
