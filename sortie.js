@@ -1,42 +1,41 @@
 var worldStateData = require("warframe-worldstate-data");
-var request = require("request");
-
-//var missionTypesRaw = fs.readFileSync("missionTypes.json");
-//var sortieDataRaw = fs.readFileSync("sortieData.json");
-//var missionTypes = JSON.parse(missionTypesRaw);
-//var sortieData = JSON.parse(sortieDataRaw);
 var missionTypes = worldStateData.missionTypes;
 var sortieData = worldStateData.sortie;
 var nodeData = worldStateData.solNodes;
 
-function rawSortieData(callBack) {
-  request(
-    "http://content.warframe.com/dynamic/worldState.php",
-    { json: true },
-    function(error, response, body) {
-      console.log("error:", error);
-      var alerts = body.Sorties[0].Variants.map(function(dir) {
-        return {
-          missionType: dir.missionType,
-          modifierType: dir.modifierType,
-          node: dir.node
-        };
-      });
-      var boss = body.Sorties[0].Boss;
-      callbackData = [alerts, boss];
-      callBack(callbackData);
-    }
-  );
+function getSortieData(callback) {
+  var body = require("./wfWorldStateData.js");
+  testVar = "test";
+  body(function(rawData, dataOfInterest) {
+    callback(rawData);
+  }, setDataType);
 }
 
-function sortieTranslate(rawData) {
-  return `**${sortieData["bosses"][rawData[1]]["name"]} Sortie**
-  __${missionTypes[rawData[0][0].missionType]["value"]} (${sortieData["modifierTypes"][rawData[0][0].modifierType]})__ ${nodeData[rawData[0][0].node]["value"]}
-  __${missionTypes[rawData[0][1].missionType]["value"]} (${sortieData["modifierTypes"][rawData[0][1].modifierType]})__ ${nodeData[rawData[0][1].node]["value"]}
-  __${missionTypes[rawData[0][2].missionType]["value"]} (${sortieData["modifierTypes"][rawData[0][2].modifierType]})__ ${nodeData[rawData[0][2].node]["value"]}`;
+function rawDataTranslate(dataMap) {
+  var output = outputFormat(dataMap);
+  return output.join("");
 }
+
+function outputFormat(dataMap) {
+  var output = dataMap[1].map(function(dir) {
+    return `  ${missionTypes[dir.missionType]["value"]} (${sortieData["modifierTypes"][dir.modifierType]}) -- *${nodeData[dir.node]["value"]}*\n`;
+  });
+  output.unshift(`**${sortieData["bosses"][dataMap[0]]["name"]} Sortie**\n`);
+  return output;
+}
+
+function setDataType(rawData) {
+  var dataOfInterest = [];
+  dataOfInterest = [
+    rawData.Sorties[0].Variants,
+    ["missionType", "modifierType", "node"],
+    rawData.Sorties[0].Boss
+  ];
+  return dataOfInterest;
+}
+
 module.exports = function(callback) {
-  rawSortieData(function(rawData) {
-    callback(sortieTranslate(rawData));
+  getSortieData(function(dataMap) {
+    callback(rawDataTranslate(dataMap));
   });
 };

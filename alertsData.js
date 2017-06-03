@@ -44,7 +44,7 @@ function translateAlerts(alerts) {
       ];
     } else if (alertRewards.items != undefined) {
       output[i] = [
-        `**${rewardsData[alertRewards.items[0].toLowerCase()]["value"]} (${credits}cr**) ${minSec}\n`
+        `**${rewardsData[alertRewards.items[0].toLowerCase()]["value"]} (${credits}cr)** ${minSec}\n`
       ];
     } else {
       output[i] = undefined;
@@ -64,7 +64,7 @@ function convertTime(ExpTime) {
   var timeDiff = ExpTime - currentTime;
   var minutes = Math.floor(timeDiff / 1000 / 60);
   var seconds = Math.round(timeDiff / 1000) % 60;
-  return `__(${minutes}m ${seconds}s)__`;
+  return `*(${minutes}m ${seconds}s)*`;
 }
 
 function numberWithCommas(x) {
