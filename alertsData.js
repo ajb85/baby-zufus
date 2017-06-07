@@ -31,7 +31,6 @@ function setDataType(rawData) {
 }
 
 function outputFormat(dataMap) {
-  console.log(dataMap);
   var minSec = dataMap[0].map(function(x) {
     return convertTime(x["Expiry.$date.$numberLong"]);
   });

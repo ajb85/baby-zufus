@@ -33,7 +33,6 @@ function mappinZeData(directory, key) {
 }
 
 function rawDataTranslate(formattedOutput) {
-  console.log(formattedOutput);
   return formattedOutput.join("");
 }
 
