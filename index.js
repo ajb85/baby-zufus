@@ -46,6 +46,15 @@ zufus.on("message", msg => {
   } else if (msg.isMentioned(zufusID) && msg.isMentioned(papaInterro)) {
     msg.channel.send("papa?");
     console.log(msg.author.username, "mentioned with Jenterro");
+  } else if (
+    msg.content.toLowerCase() === "invasions" ||
+    msg.content.toLowerCase() === "invasion"
+  ) {
+    var alerts = require("./invasionsData.js");
+    alerts(function(giantString) {
+      msg.channel.send(giantString);
+      console.log(msg.author.username, "asked for invasions");
+    });
   }
 });
 
