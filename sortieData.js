@@ -5,36 +5,35 @@ var nodeData = worldStateData.solNodes;
 
 function getSortieData(callback) {
   var body = require("./wfWorldStateData.js");
-  body(function(rawData, dataOfInterest) {
-    callback(rawData);
-  }, setDataType);
+  body(
+    function(rawData, dataOfInterest, output) {
+      callback(rawData);
+    },
+    setDataType,
+    outputFormat
+  );
 }
 
-function rawDataTranslate(dataMap) {
-  var output = outputFormat(dataMap);
-  return output.join("");
+function setDataType(rawData) {
+  var dataOfInterest = [
+    rawData.Sorties[0].Variants,
+    ["missionType", "modifierType", "node"],
+    rawData.Sorties,
+    ["Boss"]
+  ];
+  return dataOfInterest;
 }
 
 function outputFormat(dataMap) {
   var output = dataMap[1].map(function(dir) {
     return `  ${missionTypes[dir.missionType]["value"]} (${sortieData["modifierTypes"][dir.modifierType]}) -- *${nodeData[dir.node]["value"]}*\n`;
   });
-  output.unshift(`**${sortieData["bosses"][dataMap[0]]["name"]} Sortie**\n`);
+  output.unshift(
+    `**${sortieData["bosses"][dataMap[0][0]["Boss"]]["name"]} Sortie**\n`
+  );
   return output;
 }
 
-function setDataType(rawData) {
-  var dataOfInterest = [];
-  dataOfInterest = [
-    rawData.Sorties[0].Variants,
-    ["missionType", "modifierType", "node"],
-    rawData.Sorties[0].Boss
-  ];
-  return dataOfInterest;
-}
-
 module.exports = function(callback) {
-  getSortieData(function(dataMap) {
-    callback(rawDataTranslate(dataMap));
-  });
+  getSortieData(callback);
 };

@@ -10,6 +10,8 @@ const API_TOKEN = require("fs")
   .trim();
 const zufus = new Discord.Client();
 var usageTacking = {};
+var zufusID = "189546691475668992";
+var papaInterro = "92717477225598976";
 
 zufus.on("ready", () => {
   console.log(`Logged in as ${zufus.user.username}!`);
@@ -24,27 +26,24 @@ zufus.on("message", msg => {
     msg.channel.send("Pong!");
     console.log(msg.author.username, "pinged");
   } else if (msg.content.toLowerCase() === "sortie") {
-    var sortie = require("./sortie.js");
+    var sortie = require("./sortieData.js");
     sortie(function(giantString) {
       msg.channel.send(giantString);
       console.log(msg.author.username, "asked for Sorties");
     });
-  } else if (msg.content.toLowerCase() === "alerts") {
+  } else if (
+    msg.content.toLowerCase() === "alerts" ||
+    msg.content.toLowerCase() === "alert"
+  ) {
     var alerts = require("./alertsData.js");
     alerts(function(giantString) {
       msg.channel.send(giantString);
       console.log(msg.author.username, "asked for alerts");
     });
-  } else if (
-    msg.isMentioned("189546691475668992") &&
-    msg.content.search("raid") > 0
-  ) {
+  } else if (msg.isMentioned(zufusID) && msg.content.search("raid") > 0) {
     msg.channel.send("no u");
     console.log(msg.author.username, "asked for raids");
-  } else if (
-    msg.isMentioned("189546691475668992") &&
-    msg.isMentioned("92717477225598976")
-  ) {
+  } else if (msg.isMentioned(zufusID) && msg.isMentioned(papaInterro)) {
     msg.channel.send("papa?");
     console.log(msg.author.username, "mentioned with Jenterro");
   }
