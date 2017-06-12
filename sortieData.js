@@ -18,19 +18,16 @@ function setDataType(rawData) {
   var dataOfInterest = [
     rawData.Sorties[0].Variants,
     ["missionType", "modifierType", "node"],
-    rawData.Sorties,
-    ["Boss"]
+    rawData.Sorties[0].Boss
   ];
   return dataOfInterest;
 }
 
 function outputFormat(dataMap) {
-  var output = dataMap[1].map(function(dir) {
-    return `  ${missionTypes[dir.missionType]["value"]} (${sortieData["modifierTypes"][dir.modifierType]}) -- *${nodeData[dir.node]["value"]}*\n`;
+  var output = dataMap[0].map(function(dir) {
+    return `  __${missionTypes[dir.missionType].value}__ (${sortieData.modifierTypes[dir.modifierType]}) -- *${nodeData[dir.node].value}*\n`;
   });
-  output.unshift(
-    `**${sortieData["bosses"][dataMap[0][0]["Boss"]]["name"]} Sortie**\n`
-  );
+  output.unshift(`**${sortieData.bosses[dataMap[1]].name} Sortie**\n`);
   return output;
 }
 

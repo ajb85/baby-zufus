@@ -18,15 +18,13 @@ function getInvasionData(callback) {
 function setDataType(rawData) {
   var dataOfInterest = [
     rawData.Invasions,
-    ["Node", "AttackerReward", "DefenderReward"],
-    rawData.Invasions,
-    ["Not Used for Invasions"]
+    ["Node", "AttackerReward", "DefenderReward"]
   ];
   return dataOfInterest;
 }
 
 function outputFormat(dataMap) {
-  var output = dataMap[1].map(function(dir) {
+  var output = dataMap[0].map(function(dir) {
     var node = nodeData[dir.Node]["value"];
     if (
       dir.AttackerReward.countedItems != undefined &&
@@ -34,28 +32,29 @@ function outputFormat(dataMap) {
     ) {
       var attReward = dir.AttackerReward.countedItems[0];
       var defReward = dir.DefenderReward.countedItems[0];
-      return `**${attReward.ItemCount} ${rewardsData[attReward.ItemType.toLowerCase()]["value"]}** vs. **${defReward.ItemCount} ${rewardsData[defReward.ItemType.toLowerCase()]["value"]}** *${node}*\n`;
+      return `  __${rewardsData[attReward.ItemType.toLowerCase()]["value"]} (${attReward.ItemCount})__ vs. __${rewardsData[defReward.ItemType.toLowerCase()]["value"]} (${defReward.ItemCount})__ *${node}*\n`;
     } else if (
       dir.AttackerReward.items != undefined &&
       dir.DefenderReward.items != undefined
     ) {
       var attReward = dir.AttackerReward.items[0];
       var defReward = dir.DefenderReward.items[0];
-      return `**${rewardsData[attReward.toLowerCase()]["value"]}** vs. **${rewardsData[defReward.toLowerCase()]["value"]}** *${node}*\n`;
+      return `  __${rewardsData[attReward.toLowerCase()]["value"]}__ vs. __${rewardsData[defReward.toLowerCase()]["value"]}__ *${node}*\n`;
     } else if (
       dir.AttackerReward.countedItems === undefined &&
       dir.DefenderReward.countedItems != undefined
     ) {
       var reward = dir.DefenderReward.countedItems[0];
-      return `**${reward.ItemCount} ${rewardsData[reward.ItemType.toLowerCase()]["value"]}** *${node}*\n`;
+      return `  __${rewardsData[reward.ItemType.toLowerCase()]["value"]} (${reward.ItemCount})__ *${node}*\n`;
     } else if (
       dir.AttackerReward.countedItems != undefined &&
       dir.DefenderReward.countedItems === undefined
     ) {
       var reward = dir.AttackerReward.countedItems[0];
-      return `**${reward.ItemCount} ${rewardsData[reward.ItemType.toLowerCase()]["value"]}** *${node}*\n`;
+      return `  ${reward.ItemCount} __${rewardsData[reward.ItemType.toLowerCase()]["value"]}__ *${node}*\n`;
     }
   });
+  output.unshift(`**Invasions**\n`);
   return output;
 }
 
