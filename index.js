@@ -90,14 +90,15 @@ function checkAlerts() {
   //console.log("Checking for alerts");
   var rOI = require("./alertsData.js");
   rOI(function(giantString) {
-    console.log("giantString:", giantString);
-    giantString.forEach(function(newAlerts) {
-      if (alertIDs.indexOf(newAlerts[1]) < 0) {
-        alertIDs.push(newAlerts[1]);
-        alertIDs.shift();
-        channel.send(newAlerts[0]);
-      }
-    });
+    if (giantString !== undefined) {
+      giantString.forEach(function(newAlerts) {
+        if (alertIDs.indexOf(newAlerts[1]) < 0) {
+          alertIDs.push(newAlerts[1]);
+          alertIDs.shift();
+          channel.send(newAlerts[0]);
+        }
+      });
+    }
   }, "time request");
 }
 

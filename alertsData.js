@@ -41,18 +41,18 @@ function outputFormat(dataMap, status) {
   });
   if (status === "time request") {
     dataMap = matchesExist(findMatches(dataMap[0]));
-    var output = dataMap.map(function(dir, i) {
-      if (dir["MissionInfo.missionReward"].items != undefined) {
-        var reward = dir["MissionInfo.missionReward"].items[0];
-        var returnArray = [
-          `Good alert fetched!:\n**${rewardsData[reward.toLowerCase()]["value"]} (${credits[i]}cr)** ${minSec[i]}\n`,
-          JSON.stringify(dir["_id.$oid"])
-        ];
-        console.log("returnArray:", returnArray);
-        return returnArray;
-      }
-    });
-  } else {
+    if (dataMap !== "nada") {
+      var output = dataMap.map(function(dir, i) {
+        if (dir["MissionInfo.missionReward"].items != undefined) {
+          var reward = dir["MissionInfo.missionReward"].items[0];
+          return [
+            `Good alert fetched!:\n**${rewardsData[reward.toLowerCase()]["value"]} (${credits[i]}cr)** ${minSec[i]}\n`,
+            JSON.stringify(dir["_id.$oid"])
+          ];
+        }
+      });
+    }
+  } else if ((status = "user request")) {
     var output = dataMap[0].map(function(dir, i) {
       if (dir["MissionInfo.missionReward"].countedItems != undefined) {
         var reward = dir["MissionInfo.missionReward"].countedItems[0];
