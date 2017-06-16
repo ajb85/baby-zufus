@@ -2,7 +2,7 @@ console.log("Zufus starting");
 const Discord = require("discord.js");
 const path = require("path");
 var zufusTalk = require("./zufusTalk.js");
-
+var zufuslog = "190723198650679297";
 const client = new Discord.Client();
 const API_TOKEN = require("fs")
   .readFileSync(path.resolve(__dirname, "./API_TOKEN"), "utf8")

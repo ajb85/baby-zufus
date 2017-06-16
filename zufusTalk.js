@@ -4,7 +4,6 @@ var usageTrack = require("./database.json");
 module.exports = function(zufus, msg) {
   var zufusID = "189546691475668992";
   var papaInterro = "92717477225598976";
-  var zufuslog = "190723198650679297";
   if (msg.author.equals(zufus.user)) {
     return false;
   }
@@ -88,6 +87,7 @@ module.exports = function(zufus, msg) {
       output.push(`${x} has used the following commands:\n`);
       output.push(`${JSON.stringify(usageTrack[x])}\n`);
     });
+    recordUsage(msg.author.username, "tracking");
     msg.channel.send(output.join(""));
   }
 };
