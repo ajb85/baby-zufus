@@ -1,7 +1,5 @@
 var worldStateData = require("warframe-worldstate-data");
-var missionData = worldStateData.missionTypes;
-var factionData = worldStateData.factions;
-var rewardsData = worldStateData.languages;
+var fissureData = worldStateData.fissureModifiers;
 var nodeData = worldStateData.solNodes;
 
 function getAlertData(callback, status) {
@@ -18,59 +16,22 @@ function getAlertData(callback, status) {
 
 function setDataType(rawData) {
   var dataOfInterest = [
-    rawData.Alerts,
-    [
-      "_id.$oid",
-      "MissionInfo.missionReward",
-      "MissionInfo.faction",
-      "MissionInfo.missionType",
-      "MissionInfo.location",
-      "Expiry.$date.$numberLong"
-    ]
+    rawData.ActiveMissions,
+    ["Node", "Modifier", "Expiry.$date.$numberLong"]
   ];
   return dataOfInterest;
 }
 
 function outputFormat(dataMap, status) {
-  if (status === "time request") {
-    dataMap = matchesExist(findMatches(dataMap[0]));
-    if (dataMap !== "nada") {
-      var output = dataMap.map(function(dir) {
-        if (dir["MissionInfo.missionReward"].items != undefined) {
-          var reward = dir["MissionInfo.missionReward"].items[0];
-          return [
-            `Good alert fetched!:\n**${rewardsData[reward.toLowerCase()][
-              "value"
-            ]} (${numberWithCommas(
-              dir["MissionInfo.missionReward"].credits
-            )}cr)** ${convertTime(dir["Expiry.$date.$numberLong"])}\n`,
-            JSON.stringify(dir["_id.$oid"])
-          ];
-        }
-      });
-    }
-  } else if ((status = "user request")) {
-    var minSec = dataMap[0].map(function(entry) {
-      return convertTime(entry["Expiry.$date.$numberLong"]);
-    });
-    var credits = dataMap[0].map(function(entry) {
-      return numberWithCommas(entry["MissionInfo.missionReward"].credits);
-    });
-    var output = dataMap[0].map(function(dir, i) {
-      if (dir["MissionInfo.missionReward"].countedItems != undefined) {
-        var reward = dir["MissionInfo.missionReward"].countedItems[0];
-        return `  __${reward.ItemCount} ${rewardsData[
-          reward.ItemType.toLowerCase()
-        ]["value"]}__ (${credits[i]}cr) -- ${minSec[i]}\n`;
-      } else if (dir["MissionInfo.missionReward"].items != undefined) {
-        var reward = dir["MissionInfo.missionReward"].items[0];
-        return `  __${rewardsData[reward.toLowerCase()]["value"]}__ (${credits[
-          i
-        ]}cr) -- ${minSec[i]}\n`;
-      }
-    });
-    output.unshift(`**Alerts**\n`);
-  }
+  var minSec = dataMap[0].map(function(entry) {
+    return convertTime(entry["Expiry.$date.$numberLong"]);
+  });
+  var output = dataMap[0].map(function(dir, i) {
+    return `  __${fissureData[
+      dir.Modifier
+    ].value} ${nodeData[dir.Node].enemy} (${nodeData[dir.Node].type})__ ${nodeData[dir.Node].value}  ${minSec[i]}\n`;
+  });
+  output.unshift(`**Fissures**\n`);
   return output;
 }
 

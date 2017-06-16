@@ -6,6 +6,7 @@ function rawData(callback, setDataType, outputFormat, status) {
     "http://content.warframe.com/dynamic/worldState.php",
     { json: true },
     function(error, response, body) {
+      console.log("error:", error);
       var dataOfInterest = setDataType(body);
       var dataMap = rawMap(dataOfInterest);
       var formattedOutput = outputFormat(dataMap, status);

@@ -4,14 +4,15 @@ var worldStateData = require("warframe-worldstate-data");
 var rewardsData = worldStateData.languages;
 var nodeData = worldStateData.solNodes;
 
-function getInvasionData(callback) {
+function getInvasionData(callback, status) {
   var body = require("./wfWorldStateData.js");
   body(
     function(rawData, dataOfInterest, output) {
       callback(rawData);
     },
     setDataType,
-    outputFormat
+    outputFormat,
+    status
   );
 }
 
@@ -59,17 +60,63 @@ function outputFormat(dataMap) {
 }
 
 function convertTime(ExpTime) {
+  var time = [];
   var currentTime = new Date();
   var timeDiff = ExpTime - currentTime;
-  var minutes = Math.floor(timeDiff / 1000 / 60);
+  if (timeDiff >= 86400000) {
+    var days = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
+    time.push(`${days}d`);
+  }
+  if (timeDiff >= 3600000) {
+    var hours = Math.round(timeDiff / 1000 / 60 / 60 % 24);
+    time.push(`${hours}h`);
+  }
+  if (timeDiff >= 60000) {
+    var minutes = Math.round(timeDiff / 1000 / 60 % 60);
+    time.push(`${minutes}m`);
+  }
   var seconds = Math.round(timeDiff / 1000) % 60;
-  return `*(${minutes}m ${seconds}s)*`;
+  time.push(`${seconds}s`);
+  return `*${time.join(" ")}*`;
 }
 
 function numberWithCommas(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-module.exports = function(callback) {
-  getInvasionData(callback);
+function findMatches(invasions) {
+  var path = "MissionInfo.missionReward";
+  var interestingRewards = require("./rewardsOfInterest.js");
+  var matches = interestingRewards
+    .map(function(rewards) {
+      return invasions.filter(function(currentInvasions) {
+        if (
+          (currentInvasions[path].countedItems !== undefined &&
+            currentInvasions[path].countedItems[0].ItemType.toLowerCase() ===
+              rewards) ||
+          (currentInvasions[path].items != undefined &&
+            currentInvasions[path].items[0].toLowerCase() === rewards)
+        ) {
+          return currentInvasions;
+        }
+      });
+    })
+    .filter(function(empty) {
+      return empty != "";
+    });
+  return matches;
+}
+
+function matchesExist(matches) {
+  if (matches.length !== 0) {
+    return matches.reduce(function(accum, currentVal) {
+      return accum.concat(currentVal);
+    });
+  } else {
+    return "nada";
+  }
+}
+
+module.exports = function(callback, status) {
+  getInvasionData(callback, status);
 };
