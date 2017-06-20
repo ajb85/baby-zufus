@@ -6,7 +6,7 @@ var nodeData = worldStateData.solNodes;
 function getSortieData(callback) {
   var body = require("./wfWorldStateData.js");
   body(
-    function(rawData, dataOfInterest, output) {
+    function(rawData) {
       callback(rawData);
     },
     setDataType,
@@ -25,7 +25,9 @@ function setDataType(rawData) {
 
 function outputFormat(dataMap) {
   var output = dataMap[0].map(function(dir) {
-    return `  __${missionTypes[dir.missionType].value}__ (${sortieData.modifierTypes[dir.modifierType]}) -- *${nodeData[dir.node].value}*\n`;
+    return `  __${missionTypes[
+      dir.missionType
+    ].value}__ (${sortieData.modifierTypes[dir.modifierType]}) -- *${nodeData[dir.node].value}*\n`;
   });
   output.unshift(`**${sortieData.bosses[dataMap[1]].name} Sortie**\n`);
   return output;

@@ -7,13 +7,15 @@ function rawData(callback, setDataType, outputFormat, status) {
     { json: true },
     function(error, response, body) {
       console.log("error:", error);
-      var dataOfInterest = setDataType(body);
-      var dataMap = rawMap(dataOfInterest);
-      var formattedOutput = outputFormat(dataMap, status);
-      if (status === "time request") {
-        callback(formattedOutput);
-      } else {
-        callback(formattedOutput.join(""));
+      if (!error) {
+        var dataOfInterest = setDataType(body);
+        var dataMap = rawMap(dataOfInterest);
+        var formattedOutput = outputFormat(dataMap, status);
+        if (status === "time request") {
+          callback(formattedOutput);
+        } else {
+          callback(formattedOutput.join(""));
+        }
       }
     }
   );

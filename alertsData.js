@@ -3,11 +3,13 @@ var missionData = worldStateData.missionTypes;
 var factionData = worldStateData.factions;
 var rewardsData = worldStateData.languages;
 var nodeData = worldStateData.solNodes;
+var rewardsDB = require("./rewardsDB.json");
+var rOI = require("./rewardsOfInterest.json");
 
 function getAlertData(callback, status) {
   var body = require("./wfWorldStateData.js");
   body(
-    function(rawData, dataOfInterest, output) {
+    function(rawData) {
       callback(rawData);
     },
     setDataType,
@@ -36,16 +38,25 @@ function outputFormat(dataMap, status) {
     dataMap = matchesExist(findMatches(dataMap[0]));
     if (dataMap !== "nada") {
       var output = dataMap.map(function(dir) {
-        if (dir["MissionInfo.missionReward"].items != undefined) {
+        if (dir["MissionInfo.missionReward"].items !== undefined) {
           var reward = dir["MissionInfo.missionReward"].items[0];
-          return [
-            `Good alert fetched!:\n**${rewardsData[reward.toLowerCase()][
-              "value"
-            ]} (${numberWithCommas(
-              dir["MissionInfo.missionReward"].credits
-            )}cr)** ${convertTime(dir["Expiry.$date.$numberLong"])}\n`,
-            JSON.stringify(dir["_id.$oid"])
-          ];
+          var rewardTranslation = rOI[1][rOI[0].indexOf(reward.toLowerCase())];
+          var mentions = rewardsDB[rewardTranslation];
+          mentions = mentions.map(function(idToMention) {
+            return `<@${idToMention}>`;
+          });
+          if (mentions !== undefined) {
+            return [
+              `${mentions.join(", ")}:\n**${rewardsData[reward.toLowerCase()][
+                "value"
+              ]} (${numberWithCommas(
+                dir["MissionInfo.missionReward"].credits
+              )}cr)** ${convertTime(dir["Expiry.$date.$numberLong"])}\n`,
+              JSON.stringify(dir["_id.$oid"])
+            ];
+          } else {
+            return void 0;
+          }
         }
       });
     }
@@ -101,8 +112,8 @@ function numberWithCommas(x) {
 
 function findMatches(alerts) {
   var path = "MissionInfo.missionReward";
-  var interestingRewards = require("./rewardsOfInterest.js");
-  var matches = interestingRewards
+  var interestingRewards = require("./rewardsOfInterest.json");
+  var matches = interestingRewards[0]
     .map(function(rewards) {
       return alerts.filter(function(currentAlerts) {
         if (

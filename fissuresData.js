@@ -5,7 +5,7 @@ var nodeData = worldStateData.solNodes;
 function getAlertData(callback, status) {
   var body = require("./wfWorldStateData.js");
   body(
-    function(rawData, dataOfInterest, output) {
+    function(rawData) {
       callback(rawData);
     },
     setDataType,

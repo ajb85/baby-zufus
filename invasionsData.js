@@ -7,7 +7,7 @@ var nodeData = worldStateData.solNodes;
 function getInvasionData(callback, status) {
   var body = require("./wfWorldStateData.js");
   body(
-    function(rawData, dataOfInterest, output) {
+    function(rawData) {
       callback(rawData);
     },
     setDataType,
@@ -33,26 +33,38 @@ function outputFormat(dataMap) {
     ) {
       var attReward = dir.AttackerReward.countedItems[0];
       var defReward = dir.DefenderReward.countedItems[0];
-      return `  __${rewardsData[attReward.ItemType.toLowerCase()]["value"]} (${attReward.ItemCount})__ vs. __${rewardsData[defReward.ItemType.toLowerCase()]["value"]} (${defReward.ItemCount})__ *${node}*\n`;
+      return `  __${rewardsData[attReward.ItemType.toLowerCase()][
+        "value"
+      ]} (${attReward.ItemCount})__ vs. __${rewardsData[
+        defReward.ItemType.toLowerCase()
+      ]["value"]} (${defReward.ItemCount})__ *${node}*\n`;
     } else if (
       dir.AttackerReward.items != undefined &&
       dir.DefenderReward.items != undefined
     ) {
       var attReward = dir.AttackerReward.items[0];
       var defReward = dir.DefenderReward.items[0];
-      return `  __${rewardsData[attReward.toLowerCase()]["value"]}__ vs. __${rewardsData[defReward.toLowerCase()]["value"]}__ *${node}*\n`;
+      return `  __${rewardsData[attReward.toLowerCase()][
+        "value"
+      ]}__ vs. __${rewardsData[defReward.toLowerCase()][
+        "value"
+      ]}__ *${node}*\n`;
     } else if (
       dir.AttackerReward.countedItems === undefined &&
       dir.DefenderReward.countedItems != undefined
     ) {
       var reward = dir.DefenderReward.countedItems[0];
-      return `  __${rewardsData[reward.ItemType.toLowerCase()]["value"]} (${reward.ItemCount})__ *${node}*\n`;
+      return `  __${rewardsData[reward.ItemType.toLowerCase()][
+        "value"
+      ]} (${reward.ItemCount})__ *${node}*\n`;
     } else if (
       dir.AttackerReward.countedItems != undefined &&
       dir.DefenderReward.countedItems === undefined
     ) {
       var reward = dir.AttackerReward.countedItems[0];
-      return `  ${reward.ItemCount} __${rewardsData[reward.ItemType.toLowerCase()]["value"]}__ *${node}*\n`;
+      return `  ${reward.ItemCount} __${rewardsData[
+        reward.ItemType.toLowerCase()
+      ]["value"]}__ *${node}*\n`;
     }
   });
   output.unshift(`**Invasions**\n`);
