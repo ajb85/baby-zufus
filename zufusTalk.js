@@ -1,18 +1,17 @@
-var writeData = require("./writeData.js");
-var usageTrack = require("./usageDB.json");
-var rOI = require("./rewardsOfInterest.json");
-var worldStateData = require("warframe-worldstate-data");
-var rewardsData = worldStateData.languages;
-var fs = require("fs");
+const writeData = require("./writeData.js");
+const usageTrack = require("./usageDB.json");
+const zufusSpam = "325944060135342090";
+const channel = zufus.channels.find("id", zufusSpam);
+const fs = require("fs");
+
+function updateAlerts() {}
 
 function oneOrTwoWords(strArr, userCommands) {
   var userInput = [];
   var badInput = [];
-  for (i = 2; i < strArr.length; i++) {
+  for (i = 2; i < strArr.length - 1; i++) {
     if (
-      (strArr[i] === "kubrow" && strArr[i + 1] == "egg") ||
-      (strArr[i] === "reactor" && strArr[i + 1] == "bp") ||
-      (strArr[i] === "catalyst" && strArr[i + 1] == "bp")
+      userCommands.rewards.indexOf(strArr[i].concat(" " + strArr[i + 1])) >= 0
     ) {
       var twoWord = strArr.slice(i, i + 2);
       userInput.indexOf(twoWord.join(" ")) < 0
@@ -45,10 +44,9 @@ function formatOutput(userInput, badInput, obj) {
   }
   if (badInput[1].length > 0) {
     outputStrings.push(
-      `But you also wrote "${badInput[1].slice(
-        0,
-        badInput[1].length
-      )}" which is gibberish and you should feel bad for that.`
+      `But you also wrote "${badInput[1]
+        .slice(0, badInput[1].length)
+        .join(" ")}" which is gibberish and you should feel bad for that.`
     );
   }
   badInput[2].channel.send(outputStrings.join(" "));
@@ -73,57 +71,6 @@ module.exports = function(zufus, msg) {
     }, 2500);
     writeData(msg.author.username, "sneaks", "./usageDB.json", "ut");
     // World State Data
-  } else if (msg.content.toLowerCase() === "sortie") {
-    var sortie = require("./sortieData.js");
-    sortie(function(giantString) {
-      msg.channel.send(giantString);
-      writeData(msg.author.username, "sortie", "./usageDB.json", "ut");
-    });
-  } else if (
-    msg.content.toLowerCase() === "alerts" ||
-    msg.content.toLowerCase() === "alert"
-  ) {
-    var alerts = require("./alertsData.js");
-    alerts(function(giantString, status) {
-      msg.channel.send(giantString);
-      writeData(msg.author.username, "alerts", "./usageDB.json", "ut");
-    }, "user request");
-  } else if (
-    msg.content.toLowerCase() === "invasions" ||
-    msg.content.toLowerCase() === "invasion"
-  ) {
-    var invasions = require("./invasionsData.js");
-    invasions(function(giantString, status) {
-      msg.channel.send(giantString);
-      writeData(msg.author.username, "invasions", "./usageDB.json", "ut");
-    }, "user request");
-  } else if (
-    msg.content.toLowerCase() === "fissure" ||
-    msg.content.toLowerCase() === "fissures"
-  ) {
-    var fissures = require("./fissuresData.js");
-    fissures(function(giantString) {
-      msg.channel.send(giantString);
-      writeData(msg.author.username, "fissures", "./usageDB.json", "ut");
-    });
-  } else if (msg.content.toLowerCase() === "update") {
-    var sortie = require("./sortieData.js");
-    var alerts = require("./alertsData.js");
-    var invasions = require("./invasionsData.js");
-    var fissures = require("./fissuresData.js");
-    alerts(function(giantString) {
-      msg.channel.send(giantString);
-    });
-    invasions(function(giantString) {
-      msg.channel.send(giantString);
-    });
-    sortie(function(giantString) {
-      msg.channel.send(giantString);
-    });
-    fissures(function(giantString) {
-      msg.channel.send(giantString);
-      writeData(msg.author.username, "updates", "./usageDB.json", "ut");
-    });
   } else if (msg.isMentioned(zufusID) && msg.content.search("raid") > 0) {
     // Zufus Sass
     msg.channel.send("no u");
@@ -135,7 +82,7 @@ module.exports = function(zufus, msg) {
     var names = Object.keys(usageTrack);
     var namesKeys = Object.keys(names);
     var namesValues = Object.values(names);
-    var rewardsTracked = require("./rewardsDB.json");
+
     var output = [];
     names.map(function(x) {
       output.push(`${x} has used the following commands:\n`);

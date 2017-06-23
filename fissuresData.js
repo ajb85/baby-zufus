@@ -23,15 +23,51 @@ function setDataType(rawData) {
 }
 
 function outputFormat(dataMap, status) {
-  var minSec = dataMap[0].map(function(entry) {
+  var order = ["VoidT1", "VoidT2", "VoidT3", "VoidT4"];
+  var mapSorted = [];
+  for (i = 0; i < order.length; i++) {
+    for (j = 0; j < dataMap[0].length; j++) {
+      if (dataMap[0][j].Modifier == order[i]) {
+        mapSorted.push(dataMap[0][j]);
+      }
+    }
+  }
+  var minSec = mapSorted.map(function(entry) {
     return convertTime(entry["Expiry.$date.$numberLong"]);
   });
-  var output = dataMap[0].map(function(dir, i) {
-    return `  __${fissureData[
-      dir.Modifier
-    ].value} ${nodeData[dir.Node].enemy} (${nodeData[dir.Node].type})__ ${nodeData[dir.Node].value}  ${minSec[i]}\n`;
+  var embedObject = mapSorted.map(function(dir, i) {
+    if (dir.Modifier === "VoidT1") {
+      var fissureLevel = "Lith";
+    } else if (dir.Modifier === "VoidT2") {
+      var fissureLevel = "Meso";
+    }
+    if (dir.Modifier === "VoidT3") {
+      var fissureLevel = "Neo";
+    }
+    if (dir.Modifier === "VoidT4") {
+      var fissureLevel = "Axi";
+    }
+    return {
+      name: `${fissureLevel} ${nodeData[dir.Node].type} (${nodeData[dir.Node]
+        .enemy})`,
+      value: `${nodeData[dir.Node].value}  ${minSec[i]}`
+    };
   });
-  output.unshift(`**Fissures**\n`);
+  var output = {
+    embed: {
+      color: 3447003,
+      author: {
+        name: "Fissures",
+        icon_url:
+          "https://cdn4.iconfinder.com/data/icons/sibcode-line-tech/512/flame-512.png"
+      },
+      fields: embedObject,
+      timestamp: new Date(),
+      footer: {
+        text: "© ZufusNews"
+      }
+    }
+  };
   return output;
 }
 
@@ -96,3 +132,17 @@ function matchesExist(matches) {
 module.exports = function(callback, status) {
   getAlertData(callback, status);
 };
+
+/*WORKING outputFormat!!!!!!
+function outputFormat(dataMap, status) {
+  var minSec = dataMap[0].map(function(entry) {
+    return convertTime(entry["Expiry.$date.$numberLong"]);
+  });
+  var output = dataMap[0].map(function(dir, i) {
+    return `  ${fissureData[
+      dir.Modifier
+    ].value} ${nodeData[dir.Node].enemy} (${nodeData[dir.Node].type}) ${nodeData[dir.Node].value}  ${minSec[i]}\n`;
+  });
+  output.unshift(`**Fissures**\n`);
+  return output;
+}*/

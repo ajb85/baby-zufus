@@ -28,7 +28,6 @@ function recordReward(key, value, fileName, status, callback) {
       }
     }
   }
-
   if (callback !== undefined) {
     callback(file, key, value);
   }

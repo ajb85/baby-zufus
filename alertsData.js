@@ -6,15 +6,14 @@ var nodeData = worldStateData.solNodes;
 var rewardsDB = require("./rewardsDB.json");
 var rOI = require("./rewardsOfInterest.json");
 
-function getAlertData(callback, status) {
+function getAlertData(callback) {
   var body = require("./wfWorldStateData.js");
   body(
     function(rawData) {
       callback(rawData);
     },
     setDataType,
-    outputFormat,
-    status
+    outputFormat
   );
 }
 
@@ -32,56 +31,81 @@ function setDataType(rawData) {
   ];
   return dataOfInterest;
 }
-
-function outputFormat(dataMap, status) {
-  if (status === "time request") {
-    dataMap = matchesExist(findMatches(dataMap[0]));
-    if (dataMap !== "nada") {
-      var output = dataMap.map(function(dir) {
-        if (dir["MissionInfo.missionReward"].items !== undefined) {
-          var reward = dir["MissionInfo.missionReward"].items[0];
-          var rewardTranslation = rOI[1][rOI[0].indexOf(reward.toLowerCase())];
-          var mentions = rewardsDB[rewardTranslation];
-          mentions = mentions.map(function(idToMention) {
-            return `<@${idToMention}>`;
-          });
-          if (mentions !== undefined) {
-            return [
-              `${mentions.join(", ")}:\n**${rewardsData[reward.toLowerCase()][
-                "value"
-              ]} (${numberWithCommas(
-                dir["MissionInfo.missionReward"].credits
-              )}cr)** ${convertTime(dir["Expiry.$date.$numberLong"])}\n`,
-              JSON.stringify(dir["_id.$oid"])
-            ];
-          } else {
-            return void 0;
-          }
-        }
-      });
+/*{embed: {
+    color: 3447003,
+    author: {
+      name: client.user.username,
+      icon_url: client.user.avatarURL
+    },
+    title: "**Active Alerts**",
+    //url: "http://google.com",
+    //description: "This is a test embed to showcase what they look like and what they can do.",
+    fields: [{
+        name: "Reward (Credits) - Time left",
+        value: "Node (Planet)."
+      },
+      {
+        name: "Masked links",
+        value: "You can put [masked links](http://google.com) inside of rich embeds."
+      },
+      {
+        name: "Markdown",
+        value: "You can put all the *usual* **Markdown** inside of them."
+      }
+    ],
+    timestamp: new Date(),
+    footer: {
+      icon_url: client.user.avatarURL,
+      text: "© Example"
     }
-  } else if ((status = "user request")) {
-    var minSec = dataMap[0].map(function(entry) {
-      return convertTime(entry["Expiry.$date.$numberLong"]);
-    });
-    var credits = dataMap[0].map(function(entry) {
-      return numberWithCommas(entry["MissionInfo.missionReward"].credits);
-    });
-    var output = dataMap[0].map(function(dir, i) {
+  }
+});*/
+function outputFormat(dataMap) {
+  var minSec = dataMap[0].map(function(entry) {
+    return convertTime(entry["Expiry.$date.$numberLong"]);
+  });
+  var credits = dataMap[0].map(function(entry) {
+    return numberWithCommas(entry["MissionInfo.missionReward"].credits);
+  });
+  var embedObject = dataMap[0]
+    .map(function(dir, i) {
       if (dir["MissionInfo.missionReward"].countedItems != undefined) {
         var reward = dir["MissionInfo.missionReward"].countedItems[0];
-        return `  __${reward.ItemCount} ${rewardsData[
-          reward.ItemType.toLowerCase()
-        ]["value"]}__ (${credits[i]}cr) -- ${minSec[i]}\n`;
+        return {
+          name: `${reward.ItemCount} ${rewardsData[
+            reward.ItemType.toLowerCase()
+          ]["value"]} (${credits[i]} credits)`,
+          value: `${minSec[i]} -- ${nodeData[dir["MissionInfo.location"]]
+            .value}`
+        };
       } else if (dir["MissionInfo.missionReward"].items != undefined) {
         var reward = dir["MissionInfo.missionReward"].items[0];
-        return `  __${rewardsData[reward.toLowerCase()]["value"]}__ (${credits[
-          i
-        ]}cr) -- ${minSec[i]}\n`;
+        return {
+          name: `${rewardsData[reward.toLowerCase()]["value"]} (${minSec[i]})`,
+          value: `(${credits[i]}cr) -- ${nodeData[dir["MissionInfo.location"]]
+            .value}`
+        };
       }
+    })
+    .filter(function(empty) {
+      return empty != null;
     });
-    output.unshift(`**Alerts**\n`);
-  }
+  var output = {
+    embed: {
+      color: 3447003,
+      author: {
+        name: "Alerts",
+        icon_url:
+          "https://cdn.pixabay.com/photo/2013/04/01/10/57/exclamation-mark-98739_960_720.png"
+      },
+      fields: embedObject,
+      timestamp: new Date(),
+      footer: {
+        text: "© ZufusNews"
+      }
+    }
+  };
+
   return output;
 }
 
@@ -119,9 +143,10 @@ function findMatches(alerts) {
         if (
           (currentAlerts[path].countedItems !== undefined &&
             currentAlerts[path].countedItems[0].ItemType.toLowerCase() ===
-              rewards) ||
+              rewards.toLowerCase()) ||
           (currentAlerts[path].items != undefined &&
-            currentAlerts[path].items[0].toLowerCase() === rewards)
+            currentAlerts[path].items[0].toLowerCase() ===
+              rewards.toLowerCase())
         ) {
           return currentAlerts;
         }
@@ -143,6 +168,61 @@ function matchesExist(matches) {
   }
 }
 
-module.exports = function(callback, status) {
-  getAlertData(callback, status);
+module.exports = function(callback) {
+  getAlertData(callback);
 };
+//WORKING outputFormat!!!!!!
+/*function outputFormat(dataMap) {
+  var minSec = dataMap[0].map(function(entry) {
+    return convertTime(entry["Expiry.$date.$numberLong"]);
+  });
+  var credits = dataMap[0].map(function(entry) {
+    return numberWithCommas(entry["MissionInfo.missionReward"].credits);
+  });
+  var output = dataMap[0].map(function(dir, i) {
+    if (dir["MissionInfo.missionReward"].countedItems != undefined) {
+      var reward = dir["MissionInfo.missionReward"].countedItems[0];
+      return `  ${reward.ItemCount} ${rewardsData[
+        reward.ItemType.toLowerCase()
+      ]["value"]} (${credits[i]}cr) -- ${minSec[i]}\n`;
+    } else if (dir["MissionInfo.missionReward"].items != undefined) {
+      var reward = dir["MissionInfo.missionReward"].items[0];
+      return `  ${rewardsData[reward.toLowerCase()]["value"]} (${credits[
+        i
+      ]}cr) -- ${minSec[i]}\n`;
+    }
+  });
+  output.unshift(`**Alerts**\n`);
+  return output;
+}*/
+
+//Old outputformat code:
+/*  if (status === "time request") {
+  dataMap = matchesExist(findMatches(dataMap[0]));
+  if (dataMap !== "nada") {
+    var output = dataMap.map(function(dir) {
+      if (dir["MissionInfo.missionReward"].items !== undefined) {
+        var reward = dir["MissionInfo.missionReward"].items[0];
+        var rewardTranslation = rOI[1][rOI[0].indexOf(reward.toLowerCase())];
+        var mentions = rewardsDB[rewardTranslation];
+        if (mentions !== undefined) {
+          mentions = mentions.map(function(idToMention) {
+            return `<@${idToMention}>`;
+          });
+        }
+        if (mentions !== undefined) {
+          return [
+            `${mentions.join(", ")}:\n**${rewardsData[reward.toLowerCase()][
+              "value"
+            ]} (${numberWithCommas(
+              dir["MissionInfo.missionReward"].credits
+            )}cr)** ${convertTime(dir["Expiry.$date.$numberLong"])}\n`,
+            JSON.stringify(dir["_id.$oid"])
+          ];
+        } else {
+          return void 0;
+        }
+      }
+    });
+  }
+} else if ((status = "user request")) {*/

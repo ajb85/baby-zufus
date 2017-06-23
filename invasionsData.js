@@ -25,7 +25,7 @@ function setDataType(rawData) {
 }
 
 function outputFormat(dataMap) {
-  var output = dataMap[0].map(function(dir) {
+  var embedObject = dataMap[0].map(function(dir) {
     var node = nodeData[dir.Node]["value"];
     if (
       dir.AttackerReward.countedItems != undefined &&
@@ -33,41 +33,86 @@ function outputFormat(dataMap) {
     ) {
       var attReward = dir.AttackerReward.countedItems[0];
       var defReward = dir.DefenderReward.countedItems[0];
-      return `  __${rewardsData[attReward.ItemType.toLowerCase()][
-        "value"
-      ]} (${attReward.ItemCount})__ vs. __${rewardsData[
-        defReward.ItemType.toLowerCase()
-      ]["value"]} (${defReward.ItemCount})__ *${node}*\n`;
+      var attRewardNumber = attReward.ItemCount > 1
+        ? `(${attReward.ItemCount})`
+        : "";
+      var defRewardNumber = defReward.ItemCount > 1
+        ? `(${defReward.ItemCount})`
+        : "";
+      return {
+        name: `${rewardsData[attReward.ItemType.toLowerCase()][
+          "value"
+        ]} ${attRewardNumber} vs. ${rewardsData[
+          defReward.ItemType.toLowerCase()
+        ]["value"]} ${defRewardNumber}`,
+        value: `${node}`
+      };
     } else if (
       dir.AttackerReward.items != undefined &&
       dir.DefenderReward.items != undefined
     ) {
       var attReward = dir.AttackerReward.items[0];
       var defReward = dir.DefenderReward.items[0];
-      return `  __${rewardsData[attReward.toLowerCase()][
+      var attRewardType = rewardsData[attReward.ItemType.toLowerCase()][
         "value"
-      ]}__ vs. __${rewardsData[defReward.toLowerCase()][
+      ] === "Mutalist Alad V Nav Coordinate"
+        ? `Alad V Nav Coordinate`
+        : rewardsData[attReward.ItemType.toLowerCase()]["value"];
+      var defRewardType = rewardsData[defReward.ItemType.toLowerCase()][
         "value"
-      ]}__ *${node}*\n`;
+      ] === "Mutalist Alad V Nav Coordinate"
+        ? `Alad V Nav Coordinate`
+        : rewardsData[defReward.ItemType.toLowerCase()]["value"];
+      return {
+        name: `${attRewardType} vs. ${defRewardType}`,
+        value: `${node}`
+      };
     } else if (
       dir.AttackerReward.countedItems === undefined &&
       dir.DefenderReward.countedItems != undefined
     ) {
       var reward = dir.DefenderReward.countedItems[0];
-      return `  __${rewardsData[reward.ItemType.toLowerCase()][
-        "value"
-      ]} (${reward.ItemCount})__ *${node}*\n`;
+      var rewardNumber = reward.ItemCount > 1 ? `(${reward.ItemCount})` : "";
+      var rewardType = rewardsData[reward.ItemType.toLowerCase()]["value"] ===
+        "Mutalist Alad V Nav Coordinate"
+        ? `Alad V Nav Coordinate`
+        : rewardsData[reward.ItemType.toLowerCase()]["value"];
+      return {
+        name: `${rewardType} ${rewardNumber}`,
+        value: `${node}`,
+        inline: true
+      };
     } else if (
       dir.AttackerReward.countedItems != undefined &&
       dir.DefenderReward.countedItems === undefined
     ) {
       var reward = dir.AttackerReward.countedItems[0];
-      return `  ${reward.ItemCount} __${rewardsData[
-        reward.ItemType.toLowerCase()
-      ]["value"]}__ *${node}*\n`;
+      var rewardNumber = reward.ItemCount > 1 ? `(${reward.ItemCount})` : "";
+      var rewardType = rewardsData[reward.ItemType.toLowerCase()]["value"] ===
+        "Mutalist Alad V Nav Coordinate"
+        ? `Alad V Nav Coordinate`
+        : rewardsData[reward.ItemType.toLowerCase()]["value"];
+      return {
+        name: `${rewardType} ${rewardNumber}`,
+        value: `${node}`,
+        inline: true
+      };
     }
   });
-  output.unshift(`**Invasions**\n`);
+  var output = {
+    embed: {
+      color: 3447003,
+      author: {
+        name: "Invasions",
+        icon_url: "https://d30y9cdsu7xlg0.cloudfront.net/png/38152-200.png"
+      },
+      fields: embedObject,
+      timestamp: new Date(),
+      footer: {
+        text: "© ZufusNews"
+      }
+    }
+  };
   return output;
 }
 
@@ -132,3 +177,51 @@ function matchesExist(matches) {
 module.exports = function(callback, status) {
   getInvasionData(callback, status);
 };
+
+/*Working output format!!!!!!
+function outputFormat(dataMap) {
+  var output = dataMap[0].map(function(dir) {
+    var node = nodeData[dir.Node]["value"];
+    if (
+      dir.AttackerReward.countedItems != undefined &&
+      dir.DefenderReward.countedItems != undefined
+    ) {
+      var attReward = dir.AttackerReward.countedItems[0];
+      var defReward = dir.DefenderReward.countedItems[0];
+      return `  ${rewardsData[attReward.ItemType.toLowerCase()][
+        "value"
+      ]} (${attReward.ItemCount}) vs. ${rewardsData[
+        defReward.ItemType.toLowerCase()
+      ]["value"]} (${defReward.ItemCount}) *${node}*\n`;
+    } else if (
+      dir.AttackerReward.items != undefined &&
+      dir.DefenderReward.items != undefined
+    ) {
+      var attReward = dir.AttackerReward.items[0];
+      var defReward = dir.DefenderReward.items[0];
+      return `  ${rewardsData[attReward.toLowerCase()][
+        "value"
+      ]} vs. ${rewardsData[defReward.toLowerCase()][
+        "value"
+      ]} *${node}*\n`;
+    } else if (
+      dir.AttackerReward.countedItems === undefined &&
+      dir.DefenderReward.countedItems != undefined
+    ) {
+      var reward = dir.DefenderReward.countedItems[0];
+      return `  ${rewardsData[reward.ItemType.toLowerCase()][
+        "value"
+      ]} (${reward.ItemCount}) *${node}*\n`;
+    } else if (
+      dir.AttackerReward.countedItems != undefined &&
+      dir.DefenderReward.countedItems === undefined
+    ) {
+      var reward = dir.AttackerReward.countedItems[0];
+      return `  ${reward.ItemCount} ${rewardsData[
+        reward.ItemType.toLowerCase()
+      ]["value"]} *${node}*\n`;
+    }
+  });
+  output.unshift(`**Invasions**\n`);
+  return output;
+}*/
