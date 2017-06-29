@@ -20,7 +20,6 @@ function recordReward(key, value, fileName, status, callback) {
         file[key[0][i]] = [value];
       } else if (file[key[0][i]].indexOf(value) < 0) {
         file[key[0][i]].push(value);
-      } else {
       }
     } else {
       if (file[key[0][i]].indexOf(value) !== -1) {

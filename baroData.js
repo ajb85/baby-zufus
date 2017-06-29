@@ -2,7 +2,7 @@ var worldStateData = require("warframe-worldstate-data");
 var fissureData = worldStateData.fissureModifiers;
 var nodeData = worldStateData.solNodes;
 
-function getAlertData(callback, status) {
+function getBaroData(callback, status) {
   var body = require("./wfWorldStateData.js");
   body(
     function(rawData) {
@@ -16,64 +16,57 @@ function getAlertData(callback, status) {
 
 function setDataType(rawData) {
   var dataOfInterest = [
-    rawData.ActiveMissions,
-    ["Node", "Modifier", "Expiry.$date.$numberLong"]
+    rawData.VoidTraders,
+    [
+      "_id.$oid",
+      "Activation.$date.$numberLong",
+      "Expiry.$date.$numberLong",
+      "Character",
+      "Node"
+    ]
   ];
   return dataOfInterest;
 }
 
 function outputFormat(dataMap, status) {
-  var order = ["VoidT1", "VoidT2", "VoidT3", "VoidT4"];
-  var mapSorted = [];
-  for (i = 0; i < order.length; i++) {
-    for (j = 0; j < dataMap[0].length; j++) {
-      if (dataMap[0][j].Modifier == order[i]) {
-        mapSorted.push(dataMap[0][j]);
-      }
-    }
-  }
-  var minSec = mapSorted.map(function(entry) {
-    return convertTime(entry["Expiry.$date.$numberLong"]);
-  });
-  var embedObject = mapSorted.map(function(dir, i) {
-    if (dir.Modifier === "VoidT1") {
-      var fissureLevel = "Lith";
-    } else if (dir.Modifier === "VoidT2") {
-      var fissureLevel = "Meso";
-    }
-    if (dir.Modifier === "VoidT3") {
-      var fissureLevel = "Neo";
-    }
-    if (dir.Modifier === "VoidT4") {
-      var fissureLevel = "Axi";
-    }
-    return {
-      name: `${fissureLevel} ${nodeData[dir.Node].type}  (${minSec[i]})`,
-      value: `${nodeData[dir.Node].enemy} - ${nodeData[dir.Node].value}  `
+  var startTime = dataMap[0][0]["Activation.$date.$numberLong"];
+  var tilStart = startTime - new Date();
+  var minSecStart = convertTime(startTime);
+  var minSecExp = convertTime(dataMap[0][0]["Expiry.$date.$numberLong"]);
+  if (startTime > new Date()) {
+    var embedObject = {
+      name: `Appearing at the ${nodeData[dataMap[0][0].Node].value}:`,
+      value: `${minSecStart}`
     };
-  });
+  } else {
+    var embedObject = {
+      name: `Oops, Baro is here....`,
+      value: `And I haven't written this code yet D:`
+    };
+  }
   var output = {
     embed: {
       color: 3447003,
       author: {
-        name: "Fissures",
+        name: dataMap[0][0].Character,
         icon_url:
-          "https://cdn4.iconfinder.com/data/icons/sibcode-line-tech/512/flame-512.png"
+          "http://img1.wikia.nocookie.net/__cb20150123124915/warframe/images/0/03/Voidtraderplaceholder.png"
       },
-      fields: embedObject,
+      fields: [embedObject],
       timestamp: new Date(),
       footer: {
         text: "© ZufusNews"
       }
     }
   };
+
   return output;
 }
 
 function convertTime(ExpTime) {
   var time = [];
   var currentTime = new Date();
-  var timeDiff = ExpTime - currentTime;
+  var timeDiff = Math.abs(ExpTime - currentTime);
   if (timeDiff >= 86400000) {
     var days = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
     time.push(`${days}d`);
@@ -129,19 +122,5 @@ function matchesExist(matches) {
 }
 
 module.exports = function(callback, status) {
-  getAlertData(callback, status);
+  getBaroData(callback, status);
 };
-
-/*WORKING outputFormat!!!!!!
-function outputFormat(dataMap, status) {
-  var minSec = dataMap[0].map(function(entry) {
-    return convertTime(entry["Expiry.$date.$numberLong"]);
-  });
-  var output = dataMap[0].map(function(dir, i) {
-    return `  ${fissureData[
-      dir.Modifier
-    ].value} ${nodeData[dir.Node].enemy} (${nodeData[dir.Node].type}) ${nodeData[dir.Node].value}  ${minSec[i]}\n`;
-  });
-  output.unshift(`**Fissures**\n`);
-  return output;
-}*/

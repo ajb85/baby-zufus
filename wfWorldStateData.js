@@ -9,12 +9,14 @@ function rawData(callback, setDataType, outputFormat) {
       if (error) {
         console.log("error:", error);
       }
-      if (!error) {
+      try {
         var dataOfInterest = setDataType(body);
         var dataMap = rawMap(dataOfInterest);
         var formattedOutput = outputFormat(dataMap);
 
         callback(formattedOutput);
+      } catch (err) {
+        console.log("'try' Error:", err);
       }
     }
   );

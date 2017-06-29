@@ -31,36 +31,40 @@ function setDataType(rawData) {
   ];
   return dataOfInterest;
 }
-/*{embed: {
-    color: 3447003,
-    author: {
-      name: client.user.username,
-      icon_url: client.user.avatarURL
-    },
-    title: "**Active Alerts**",
-    //url: "http://google.com",
-    //description: "This is a test embed to showcase what they look like and what they can do.",
-    fields: [{
-        name: "Reward (Credits) - Time left",
-        value: "Node (Planet)."
-      },
-      {
-        name: "Masked links",
-        value: "You can put [masked links](http://google.com) inside of rich embeds."
-      },
-      {
-        name: "Markdown",
-        value: "You can put all the *usual* **Markdown** inside of them."
-      }
-    ],
-    timestamp: new Date(),
-    footer: {
-      icon_url: client.user.avatarURL,
-      text: "© Example"
-    }
-  }
-});*/
+
 function outputFormat(dataMap) {
+  var interestingAlerts = findMatches(dataMap);
+  var noRepeats = matchesExist(interestingAlerts);
+  var output = [outputEmbedFormat(dataMap)];
+  if (noRepeats !== "nada") {
+    output.push(outputDMformat(noRepeats));
+  }
+  return output;
+}
+function outputDMformat(dataMap) {
+  var path = "MissionInfo.missionReward";
+  var output = dataMap
+    .map(function(goodAlert) {
+      if (goodAlert[path].countedItems !== undefined) {
+        var translatedName =
+          rewardsData[goodAlert[path].countedItems[0].ItemType.toLowerCase()]
+            .value;
+        var rewardList = rewardsDB[translatedName.toLowerCase()];
+      } else if (goodAlert[path].items !== undefined) {
+        var translatedName =
+          rewardsData[goodAlert[path].items[0].toLowerCase()].value;
+        var rewardList = rewardsDB[translatedName.toLowerCase()];
+      }
+      if (rewardList !== undefined && rewardList.length > 0) {
+        return [rewardList, goodAlert];
+      }
+    })
+    .filter(function(empty) {
+      return empty != null;
+    });
+  return output;
+}
+function outputEmbedFormat(dataMap) {
   var minSec = dataMap[0].map(function(entry) {
     return convertTime(entry["Expiry.$date.$numberLong"]);
   });
@@ -69,21 +73,34 @@ function outputFormat(dataMap) {
   });
   var embedObject = dataMap[0]
     .map(function(dir, i) {
-      if (dir["MissionInfo.missionReward"].countedItems != undefined) {
-        var reward = dir["MissionInfo.missionReward"].countedItems[0];
+      var path = "MissionInfo.missionReward";
+      if (dir[path].countedItems !== undefined) {
+        var reward = dir[path].countedItems[0];
+        if (reward.ItemCount > 1) {
+          var capitalReward = `${reward.ItemCount} ${capitalizeRewards(
+            rewardsData[reward.ItemType.toLowerCase()].value
+          ).join(" ")}`;
+        } else {
+          var capitalReward = `${capitalizeRewards(
+            rewardsData[reward.ItemType.toLowerCase()].value
+          ).join(" ")}`;
+        }
         return {
-          name: `${reward.ItemCount} ${rewardsData[
-            reward.ItemType.toLowerCase()
-          ]["value"]} (${credits[i]} credits)`,
-          value: `${minSec[i]} -- ${nodeData[dir["MissionInfo.location"]]
-            .value}`
+          name: `${capitalReward} (${minSec[i]})`,
+          value: `${credits[i]} credits - ${missionData[
+            dir["MissionInfo.missionType"]
+          ].value} - ${nodeData[dir["MissionInfo.location"]].value}`
         };
       } else if (dir["MissionInfo.missionReward"].items != undefined) {
         var reward = dir["MissionInfo.missionReward"].items[0];
+        var capitalReward = capitalizeRewards(
+          rewardsData[reward.toLowerCase()].value
+        ).join(" ");
         return {
-          name: `${rewardsData[reward.toLowerCase()]["value"]} (${minSec[i]})`,
-          value: `(${credits[i]}cr) -- ${nodeData[dir["MissionInfo.location"]]
-            .value}`
+          name: `${capitalReward} (${minSec[i]})`,
+          value: `${credits[i]} credits - ${missionData[
+            dir["MissionInfo.missionType"]
+          ].value} - ${nodeData[dir["MissionInfo.location"]].value}`
         };
       }
     })
@@ -108,7 +125,14 @@ function outputFormat(dataMap) {
 
   return output;
 }
-
+function capitalizeRewards(reward) {
+  var split = reward.toLowerCase().split(" ");
+  var output = [];
+  for (i = 0; i < split.length; i++) {
+    output.push(split[i][0].toUpperCase() + split[i].slice(1, split[i].length));
+  }
+  return output;
+}
 function convertTime(ExpTime) {
   var time = [];
   var currentTime = new Date();
@@ -139,7 +163,7 @@ function findMatches(alerts) {
   var interestingRewards = require("./rewardsOfInterest.json");
   var matches = interestingRewards[0]
     .map(function(rewards) {
-      return alerts.filter(function(currentAlerts) {
+      return alerts[0].filter(function(currentAlerts) {
         if (
           (currentAlerts[path].countedItems !== undefined &&
             currentAlerts[path].countedItems[0].ItemType.toLowerCase() ===
@@ -184,10 +208,10 @@ module.exports = function(callback) {
       var reward = dir["MissionInfo.missionReward"].countedItems[0];
       return `  ${reward.ItemCount} ${rewardsData[
         reward.ItemType.toLowerCase()
-      ]["value"]} (${credits[i]}cr) -- ${minSec[i]}\n`;
+      ].value} (${credits[i]}cr) -- ${minSec[i]}\n`;
     } else if (dir["MissionInfo.missionReward"].items != undefined) {
       var reward = dir["MissionInfo.missionReward"].items[0];
-      return `  ${rewardsData[reward.toLowerCase()]["value"]} (${credits[
+      return `  ${rewardsData[reward.toLowerCase()].value} (${credits[
         i
       ]}cr) -- ${minSec[i]}\n`;
     }
