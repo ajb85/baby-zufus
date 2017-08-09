@@ -1,6 +1,8 @@
-var worldStateData = require("warframe-worldstate-data");
-var fissureData = worldStateData.fissureModifiers;
-var nodeData = worldStateData.solNodes;
+const worldStateData = require("warframe-worldstate-data");
+const fissureData = worldStateData.fissureModifiers;
+const nodeData = worldStateData.solNodes;
+const rewardsData = worldStateData.languages;
+const baroRewards = require("./newStuffNotInWFWS.json");
 
 function getBaroData(callback, status) {
   var body = require("./wfWorldStateData.js");
@@ -22,7 +24,8 @@ function setDataType(rawData) {
       "Activation.$date.$numberLong",
       "Expiry.$date.$numberLong",
       "Character",
-      "Node"
+      "Node",
+      "Manifest"
     ]
   ];
   return dataOfInterest;
@@ -33,26 +36,42 @@ function outputFormat(dataMap, status) {
   var tilStart = startTime - new Date();
   var minSecStart = convertTime(startTime);
   var minSecExp = convertTime(dataMap[0][0]["Expiry.$date.$numberLong"]);
+  var traderName = "Baro Ki'Teer";
   if (startTime > new Date()) {
-    var embedObject = {
-      name: `Appearing at the ${nodeData[dataMap[0][0].Node].value}:`,
-      value: `${minSecStart}`
-    };
+    var embedObject = [
+      {
+        name: `Appearing at the ${nodeData[dataMap[0][0].Node].value}:`,
+        value: `${minSecStart}`
+      }
+    ];
   } else {
-    var embedObject = {
-      name: `Oops, Baro is here....`,
-      value: `And I haven't written this code yet D:`
-    };
+    traderName += ` - ${nodeData[dataMap[0][0].Node].value}`;
+    var embedObject = dataMap[0][0].Manifest.map(function(baroReward) {
+      var credits = numberWithCommas(baroReward.RegularPrice);
+      var ducats =
+        baroReward.PrimePrice > 0 ? `${baroReward.PrimePrice} Ducats - ` : "";
+      if (rewardsData[baroReward.ItemType.toLowerCase()] !== undefined) {
+        return {
+          name: `${rewardsData[baroReward.ItemType.toLowerCase()].value}`,
+          value: `${ducats}${credits} Credits`
+        };
+      } else {
+        return {
+          name: `${baroRewards[baroReward.ItemType]}`,
+          value: `${ducats}${credits} Credits`
+        };
+      }
+    });
   }
   var output = {
     embed: {
       color: 3447003,
       author: {
-        name: dataMap[0][0].Character,
+        name: traderName,
         icon_url:
           "http://img1.wikia.nocookie.net/__cb20150123124915/warframe/images/0/03/Voidtraderplaceholder.png"
       },
-      fields: [embedObject],
+      fields: embedObject,
       timestamp: new Date(),
       footer: {
         text: "© ZufusNews"
@@ -62,7 +81,9 @@ function outputFormat(dataMap, status) {
 
   return output;
 }
-
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 function convertTime(ExpTime) {
   var time = [];
   var currentTime = new Date();

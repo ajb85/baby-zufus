@@ -5,11 +5,7 @@ const fissuresData = require("./fissuresData.js");
 const invasionsData = require("./invasionsData.js");
 const messageIDs = require("./messageIDs.json");
 const baroData = require("./baroData.js");
-const rewardsDB = require("./rewardsDB.json");
-const uniqueID = require("./rewardIDDB.json");
-var fs = require("fs");
-var worldStateData = require("warframe-worldstate-data");
-var rewardsData = worldStateData.languages;
+const fs = require("fs");
 
 //Discord/output data
 const Discord = require("discord.js");
@@ -25,15 +21,12 @@ function checkSorties(zufus) {
 
 function checkAlerts(zufus) {
   alertsData(function(currentAlert) {
-    postData(zufus, currentAlert[0], "alerts");
-    if (currentAlert[1] !== undefined && currentAlert[1][0] !== undefined) {
-      var dmList = compileDMList(currentAlert[1]);
-      if (dmList[0] !== undefined) {
-        sendDMs(dmList, zufus);
-      }
+    postData(zufus, currentAlert[0][0], "alerts");
+    if (currentAlert[1][1] !== undefined && currentAlert[1][1].length > 0) {
+      sendDMs(currentAlert[1], zufus);
     }
-    checkFissures(zufus);
   });
+  checkFissures(zufus);
 }
 
 function checkFissures(zufus) {
@@ -56,57 +49,13 @@ function checkBaro(zufus) {
   });
 }
 
-function compileDMList(goodAlerts) {
-  var dmList = goodAlerts.map(function(alert, i) {
-    var alertedUsers = fetchAlertedUsers(alert);
-    var path = alert[1]["MissionInfo.missionReward"];
-    if (path.items !== undefined) {
-      var garbledName = path.items[0].toLowerCase();
-    } else if (path.countedItems !== undefined) {
-      var garbledName = path.countedItems[0].ItemType.toLowerCase();
-    }
-
-    var translatedName = rewardsData[garbledName].value.toLowerCase();
-    var interestedUsers = rewardsDB[translatedName];
-    var userList = interestedUsers.filter(function(id) {
-      return alertedUsers.indexOf(id) < 0;
-    });
-    idRecord(alert);
-    if (userList !== undefined && userList.length > 0) {
-      return [
-        userList,
-        `Watchlist item found.  There is an active alert for **${translatedName}**`
-      ];
-    }
-  });
-  return dmList;
-}
-function fetchAlertedUsers(alert) {
-  var id = alert[1]["_id.$oid"];
-  var output = [];
-  alert[0].forEach(function(userID) {
-    if (uniqueID[id] === undefined) {
-      uniqueID[id] = [userID];
-    } else if (uniqueID[id].indexOf(userID) < 0) {
-      uniqueID[id].push(userID);
-    } else {
-      output.push(userID);
-    }
-  });
-  return output;
-}
-function idRecord(alert) {
-  fs.writeFile("./rewardIDDB.json", JSON.stringify(uniqueID), "utf8", err => {
-    if (err) throw err;
-  });
-}
-
 function sendDMs(list, zufus) {
-  list.forEach(function(icur, i) {
-    icur[0].forEach(function(jcur) {
-      var server = zufus.fetchUser(jcur).then(
+  list[1].forEach(function(userIDList, i) {
+    userIDList.forEach(function(user) {
+      var server = zufus.fetchUser(user).then(
         user => {
-          user.send(icur[1]);
+          user.send(list[0][i]);
+          console.log(`Messaging ${user.username} about an alert.`);
         },
         reject => {
           console.log("reject:", reject);
@@ -149,13 +98,32 @@ function postData(zufus, currentData, missionType) {
 
 //Saving messageIDs to be used when the program stops and is restarted.
 function writeData(file, fileName) {
-  //console.log(file);
   if (file !== undefined) {
     file = Object.assign(messageIDs, file);
     fs.writeFile(fileName, JSON.stringify(file), "utf8", err => {
       if (err) throw err;
     });
   }
+}
+function convertTime(ExpTime) {
+  var time = [];
+  var currentTime = new Date();
+  var timeDiff = ExpTime - currentTime;
+  if (timeDiff >= 86400000) {
+    var days = Math.floor(timeDiff / 1000 / 60 / 60 / 24);
+    time.push(`${days}d`);
+  }
+  if (timeDiff >= 3600000) {
+    var hours = Math.round(timeDiff / 1000 / 60 / 60 % 24);
+    time.push(`${hours}h`);
+  }
+  if (timeDiff >= 60000) {
+    var minutes = Math.round(timeDiff / 1000 / 60 % 60);
+    time.push(`${minutes}m`);
+  }
+  var seconds = Math.round(timeDiff / 1000) % 60;
+  time.push(`${seconds}s`);
+  return `${time.join(" ")}`;
 }
 module.exports = function(zufus) {
   checkSorties(zufus);

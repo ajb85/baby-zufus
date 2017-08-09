@@ -97,10 +97,8 @@ function zufusTalk(zufus, msg) {
         msg.author.username,
         "checking what can be added to watchlist."
       );
-      var watchlistItems = userCommands.rewards.map(function(rewardItem) {
-        return capitalizeRewards(rewardItem);
-      });
-      watchlistSpeakLimit(msg, watchlistItems);
+      var watchlistItems = userCommands.rewards.map(capitalizeRewards);
+      msg.author.send(watchlistItems.sort(), { split: true });
       writeData(msg.author.username, "watchlist", "./usageDB.json", "ut");
     } else if (strArr[1].toLowerCase() === "track") {
       strArr = msg.content
@@ -140,17 +138,28 @@ function zufusTalk(zufus, msg) {
 function watchlistSpeakLimit(msg, watchlistItems) {
   watchlistItems = watchlistItems.sort();
   var i = 0;
-  var smallerMessage = [];
+  var j = 0;
+  var smallerMessage = [[]];
   while (i < watchlistItems.length) {
-    var messageLimit = 50;
-    smallerMessage.push(watchlistItems[i]);
+    var messageLimit = 70;
+    smallerMessage[j].push(watchlistItems[i]);
     if ((i + 1) % messageLimit === 0) {
-      msg.author.send(smallerMessage.join("\n"));
-      smallerMessage = [];
+      j += 1;
+      smallerMessage[j] = [];
     }
     i += 1;
   }
+  //console.log(smallerMessage);
+  //sendDelayedMessages(msg, smallerMessage);
 }
+
+/*function sendDelayedMessages(msg, messages) {
+  for (var i = 0; i < messages.length; i++) {
+    setTimeout(function() {
+      msg.author.send(messages[i]);
+    }, 500);
+  }
+}*/
 
 function correctStrings(key, inputSplit) {
   var words = [];

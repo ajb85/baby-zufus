@@ -2,6 +2,7 @@ var worldStateData = require("warframe-worldstate-data");
 var missionTypes = worldStateData.missionTypes;
 var sortieData = worldStateData.sortie;
 var nodeData = worldStateData.solNodes;
+const newData = require("./newStuffNotInWFWS.json");
 
 function getSortieData(callback) {
   var body = require("./wfWorldStateData.js");
@@ -25,10 +26,17 @@ function setDataType(rawData) {
 
 function outputFormat(dataMap) {
   var embedObject = dataMap[0].map(function(dir) {
-    return {
-      name: `${missionTypes[dir.missionType].value}`,
-      value: `${sortieData.modifierTypes[dir.modifierType]}`
-    };
+    if (missionTypes[dir.missionType] !== undefined) {
+      return {
+        name: `${missionTypes[dir.missionType].value}`,
+        value: `${sortieData.modifierTypes[dir.modifierType]}`
+      };
+    } else {
+      return {
+        name: `${newData[dir.missionType]}`,
+        value: `${sortieData.modifierTypes[dir.modifierType]}`
+      };
+    }
   });
   var output = {
     embed: {
@@ -51,14 +59,3 @@ function outputFormat(dataMap) {
 module.exports = function(callback) {
   getSortieData(callback);
 };
-
-/*WORKING outputFormat !!!!!!!!!!!!
-function outputFormat(dataMap) {
-  var output = dataMap[0].map(function(dir) {
-    return `  ${missionTypes[
-      dir.missionType
-    ].value} (${sortieData.modifierTypes[dir.modifierType]}) -- *${nodeData[dir.node].value}*\n`;
-  });
-  output.unshift(`**${sortieData.bosses[dataMap[1]].name} Sortie**\n`);
-  return output;
-}*/
