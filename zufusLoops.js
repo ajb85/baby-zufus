@@ -22,7 +22,11 @@ function checkSorties(zufus) {
 function checkAlerts(zufus) {
   alertsData(function(currentAlert) {
     postData(zufus, currentAlert[0][0], "alerts");
-    if (currentAlert[1][1] !== undefined && currentAlert[1][1].length > 0) {
+    if (
+      currentAlert[1] !== undefined &&
+      currentAlert[1][1] !== undefined &&
+      currentAlert[1][1].length > 0
+    ) {
       sendDMs(currentAlert[1], zufus);
     }
   });
@@ -50,19 +54,21 @@ function checkBaro(zufus) {
 }
 
 function sendDMs(list, zufus) {
-  list[1].forEach(function(userIDList, i) {
-    userIDList.forEach(function(user) {
-      var server = zufus.fetchUser(user).then(
-        user => {
-          user.send(list[0][i]);
-          console.log(`Messaging ${user.username} about an alert.`);
-        },
-        reject => {
-          console.log("reject:", reject);
-        }
-      );
+  if (list[1] !== undefined && list[1][1] !== undefined) {
+    list[1].forEach(function(userIDList, i) {
+      userIDList.forEach(function(user) {
+        var server = zufus.fetchUser(user).then(
+          user => {
+            user.send(list[0][i]);
+            console.log(`Messaging ${user.username} about an alert.`);
+          },
+          reject => {
+            log("reject:", reject);
+          }
+        );
+      });
     });
-  });
+  }
 }
 //Uses message IDs in Discord.js to edit existing messages or create new
 //messages if they doesn't exist.
